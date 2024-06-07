@@ -31,11 +31,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     "corsheaders",
-    "drf_yasg",
     # "django_celery_beat",
 
 
     # Second_Party Apps
+    "rating",
 
 ]
 
@@ -133,6 +133,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users.User'
+# AUTH_USER_MODEL = 'users.User'
 CSRF_COOKIE_SECURE = False
 
