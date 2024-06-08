@@ -32,13 +32,16 @@ class RatingViewSet(viewsets.ModelViewSet):
         post_id = request.data.get('post')
         score = request.data.get('score')
 
-        rating, created = Rating.objects.update_or_create(
-            user=user,
-            post_id=post_id,
-            defaults={'score': score}
-        )
-        serializer = self.get_serializer(rating)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            rating, created = Rating.objects.update_or_create(
+                user=user,
+                post_id=post_id,
+                defaults={'score': score}
+            )
+            serializer = self.get_serializer(rating)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

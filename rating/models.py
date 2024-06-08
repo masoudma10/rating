@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Avg, StdDev
 from django.utils import timezone
+from django.db.models import F, Sum, FloatField, ExpressionWrapper, DurationField
+from django.db.models.functions import Coalesce, Extract
+
 
 class Post(BaseModel):
     title = models.CharField(max_length=255)
@@ -10,15 +13,21 @@ class Post(BaseModel):
 
     @property
     def weighted_average_rating(self):
-        total_weighted_score = 0
-        total_weights = 0
         now = timezone.now()
+        ratings = self.ratings.annotate(
+            time_diff_hours=ExpressionWrapper(
+                Extract(now - F('created_at'), 'epoch') / 3600.0,
+                output_field=FloatField()
+            )
+        ).annotate(
+            weight=Coalesce(24.0 - F('time_diff_hours'), 1.0)
+        ).aggregate(
+            total_weighted_score=Sum(F('score') * F('weight'), output_field=FloatField()),
+            total_weights=Sum('weight', output_field=FloatField())
+        )
 
-        for rating in self.ratings.all():
-            time_diff = (now - rating.created_at).total_seconds() / 3600
-            weight = max(1, 24 - time_diff)
-            total_weighted_score += rating.score * weight
-            total_weights += weight
+        total_weighted_score = ratings['total_weighted_score']
+        total_weights = ratings['total_weights']
 
         return total_weighted_score / total_weights if total_weights > 0 else None
 
@@ -45,15 +54,11 @@ class Post(BaseModel):
         normalized_avg_rating = sum(normalized_scores) / len(normalized_scores)
         return normalized_avg_rating
 
-    def __str__(self):
-        return self.title
-
 
 class Rating(BaseModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField(default=0)
-    weighted_score = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ('post', 'user')

@@ -10,12 +10,15 @@ class RatingSerializer(serializers.ModelSerializer):
 
 # class PostSerializer(serializers.ModelSerializer):
 #     ratings_count = serializers.IntegerField(source='ratings.count', read_only=True)
-#     ratings_average = serializers.FloatField(source='weighted_average_rating', read_only=True)  # Update this line
+#     ratings_average = serializers.SerializerMethodField()
 #     user_rating = serializers.SerializerMethodField()
 #
 #     class Meta:
 #         model = Post
 #         fields = ['id', 'title', 'content', 'ratings_count', 'ratings_average', 'user_rating']
+#
+#     def get_ratings_average(self, obj):
+#         return obj.weighted_average_rating
 #
 #     def get_user_rating(self, obj):
 #         request = self.context.get('request')
